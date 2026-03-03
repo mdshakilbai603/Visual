@@ -1,6 +1,8 @@
 flask
-numpy
-opencv-python
-torch
-moviepy
 gunicorn
+moviepy
+torch
+transformers
+opencv-python
+requests
+google-cloud-storage
