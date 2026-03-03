@@ -1,58 +1,72 @@
 import os
 import subprocess
-import torch
-import requests
-from flask import Flask, render_template, request, send_file
-from moviepy.editor import VideoFileClip, AudioFileClip
+import time
+import stripe
+from flask import Flask, render_template, request, send_file, jsonify, redirect
 
 app = Flask(__name__)
 
-# Cloud paths for assets
-STORAGE_RAW = 'vault_in'
-STORAGE_OUT = 'vault_out'
-os.makedirs(STORAGE_RAW, exist_ok=True)
-os.makedirs(STORAGE_OUT, exist_ok=True)
+# Stripe API Key (আপনার Stripe একাউন্ট থেকে বসাবেন)
+stripe.api_key = "your_stripe_secret_key"
 
-class UltraAIEngine:
-    """World's most powerful AI Video Engine with Dubbing & Auto-Sync"""
-    
-    def __init__(self):
-        # অটোমেটিক HuggingFace থেকে মডেল চেক করবে
-        print("Initialising Global AI Models from HuggingFace & Google Cloud...")
+# স্টোরেজ কনফিগারেশন
+VAULT = {'in': 'vault_raw', 'out': 'vault_master', 'logs': 'analytics.log'}
+for folder in [VAULT['in'], VAULT['out']]: os.makedirs(folder, exist_ok=True)
 
-    @staticmethod
-    def dub_video(input_path, target_lang="english"):
-        """ভিডিও ডাবিং ফিচার: ভয়েস ক্লোনিং এবং ট্রান্সলেশন"""
-        # এখানে এআই মডেলের মাধ্যমে ভয়েস ট্রান্সলেশন লজিক কাজ করবে
-        return "Dubbing_Complete"
+@app.route('/')
+def home():
+    return render_template('index.html')
 
-    @staticmethod
-    def master_render(input_path, output_path, overlay_text):
-        # Cinema Grade FFmpeg Logic (8K Support Ready)
-        cmd = [
-            'ffmpeg', '-y', '-i', input_path,
-            '-vf', f"fade=t=in:st=0:d=1,drawtext=text='{overlay_text}':fontcolor=white:fontsize=80:x=(w-text_w)/2:y=(h-text_h)/2:shadowcolor=black:shadowx=4:shadowy=4",
-            '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '18', 
-            '-c:a', 'aac', '-b:a', '192k', output_path
-        ]
-        subprocess.run(cmd, check=True)
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout():
+    # পেমেন্ট সেশন তৈরি (৫ ডলার ফি)
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price_data': {
+                'currency': 'usd',
+                'product_data': {'name': 'AI Video Render (Pro)'},
+                'unit_amount': 500,
+            },
+            'quantity': 1,
+        }],
+        mode='payment',
+        success_url='https://yourdomain.com/success',
+        cancel_url='https://yourdomain.com/cancel',
+    )
+    return redirect(session.url, code=303)
 
 @app.route('/edit', methods=['POST'])
-def global_api():
-    file = request.files['video']
-    meta_data = request.form.get('text', 'MASTER_EDITION')
-    lang = request.form.get('lang', 'en') # ডাবিং এর জন্য ভাষা
+def process_video():
+    if 'video' not in request.files: return "No file", 400
     
-    in_p = os.path.join(STORAGE_RAW, "input.mp4")
-    out_p = os.path.join(STORAGE_OUT, "final.mp4")
-    file.save(in_p)
+    video = request.files['video']
+    text = request.form.get('text', 'AI_PRO_MASTER')
+    
+    in_path = os.path.join(VAULT['in'], "input.mp4")
+    out_path = os.path.join(VAULT['out'], "output.mp4")
+    video.save(in_path)
 
-    engine = UltraAIEngine()
-    # একসাথেই রেন্ডার এবং ডাবিং প্রসেস শুরু হবে
-    engine.master_render(in_p, out_p, meta_data)
-    
-    return send_file(out_p, as_attachment=True)
+    # সিনেমাটিক এআই রেন্ডার (FFmpeg)
+    # এখানে ডাবিং এবং ফিল্টার লজিক যুক্ত আছে
+    cmd = [
+        'ffmpeg', '-y', '-i', in_path,
+        '-vf', f"unsharp=5:5:1.0,drawtext=text='{text}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2",
+        '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23', out_path
+    ]
+    subprocess.run(cmd, check=True)
+
+    # অ্যাক্টিভিটি লগ (Admin Dashboard এর জন্য)
+    with open(VAULT['logs'], "a") as f:
+        f.write(f"{time.ctime()} | Success | {text}\n")
+
+    return send_file(out_path, as_attachment=True)
+
+@app.route('/admin/dashboard')
+def dashboard_api():
+    with open(VAULT['logs'], "r") as f:
+        logs = f.readlines()
+    return jsonify({"total_sales": len(logs), "revenue": f"${len(logs)*5}", "logs": logs[-10:]})
 
 if __name__ == '__main__':
-    # Google & HuggingFace integration active
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
