@@ -1,15 +1,15 @@
-FROM nvidia/cuda:12.0-base-ubuntu22.04
+FROM python:3.10-slim
 
+# FFmpeg এবং অন্যান্য সিস্টেম ফাইল
 RUN apt-get update && apt-get install -y \
-    python3-pip ffmpeg git libsm6 libxext6 \
+    ffmpeg git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
 
-# AI মডেল ডাউনলোড (HuggingFace থেকে)
-RUN python3 -c "import torch; print('CUDA Available:', torch.cuda.is_available())"
+# ওপেন সোর্স লাইব্রেরি ইনস্টল
+RUN pip install flask gunicorn openai-whisper gtts torch torchvision
 
 COPY . .
+
 CMD ["gunicorn", "--bind", "0.0.0.0:10000", "engine:app", "--timeout", "0"]
