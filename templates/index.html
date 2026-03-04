@@ -2,67 +2,95 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI MASTER | Global Video Cloud</title>
+    <title>AI MASTER | Global Video Cloud Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; }
-        .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-        .glass { background: rgba(255,255,255,0.05); border: 1px solid #222; border-radius: 20px; transition: 0.3s; }
-        .glass:hover { border-color: #fff; background: #111; }
+        body { background: #050505; color: #eee; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #0a0a0a; border-right: 1px solid #1a1a1a; }
+        .feature-card { background: #111; border: 1px solid #222; transition: 0.3s; cursor: pointer; }
+        .feature-card:hover { border-color: #3b82f6; background: #151515; }
+        .active-task { border-color: #3b82f6; background: #1a1a1a; color: #3b82f6; }
     </style>
 </head>
-<body class="p-10">
-    <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-10">
-            <h1 class="text-2xl font-black tracking-tighter">AI MASTER <span class="text-blue-500">GPU-100</span></h1>
-            <div class="text-[10px] text-green-500">SYSTEM: ONLINE (HUGGINGFACE + GOOGLE CLOUD)</div>
-        </header>
-
-        <div class="grid lg:grid-cols-3 gap-10">
-            <div class="lg:col-span-2 space-y-6">
-                <div class="glass p-6 aspect-video flex items-center justify-center relative overflow-hidden">
-                    <video id="preview" class="hidden w-full h-full object-cover" controls></video>
-                    <div id="uploadPlaceholder" class="text-neutral-600 text-xs">UPLOAD SOURCE ASSET TO START</div>
-                </div>
-                
-                <div class="feature-grid">
-                    <button onclick="setTask('dubbing')" class="glass p-4 text-[10px]">GLOBAL DUBBING</button>
-                    <button onclick="setTask('upscale')" class="glass p-4 text-[10px]">4K UPSCALE</button>
-                    <button onclick="setTask('bg_remove')" class="glass p-4 text-[10px]">AI BG REMOVE</button>
-                    <button onclick="setTask('slowmo')" class="glass p-4 text-[10px]">SMOOTH SLOWMO</button>
-                    <button onclick="setTask('subtitle')" class="glass p-4 text-[10px]">AUTO CAPTION</button>
-                </div>
-            </div>
-
-            <div class="glass p-8">
-                <form id="renderForm">
-                    <input type="file" name="video" class="mb-6 text-xs" required>
-                    <input type="hidden" name="task" id="taskInput" value="dubbing">
-                    
-                    <label class="block text-[10px] text-neutral-500 mb-2">TARGET DUBBING LANGUAGE</label>
-                    <select name="target_lang" class="w-full bg-black border border-neutral-800 p-3 rounded-lg mb-6 text-xs">
-                        <option value="bn">Bengali (বাংলাদেশ)</option>
-                        <option value="en">English (US)</option>
-                        <option value="hi">Hindi (India)</option>
-                        <option value="ar">Arabic (UAE)</option>
-                    </select>
-
-                    <button type="submit" class="w-full bg-blue-600 py-4 rounded-xl font-bold text-xs uppercase tracking-widest">Execute AI Render</button>
-                </form>
-            </div>
+<body class="flex h-screen overflow-hidden">
+    <div class="sidebar w-72 p-6 overflow-y-auto">
+        <h2 class="text-xl font-bold mb-8 text-blue-500 tracking-tighter italic">AI MASTER ENGINE</h2>
+        
+        <div class="space-y-3" id="taskButtons">
+            <p class="text-[10px] text-zinc-500 uppercase font-bold">AI Processing</p>
+            <button onclick="setTask('dubbing', this)" class="feature-card w-full p-4 rounded-xl text-left text-sm active-task">AI Global Dubbing</button>
+            <button onclick="setTask('upscale', this)" class="feature-card w-full p-4 rounded-xl text-left text-sm">4K AI Upscale</button>
+            <button onclick="setTask('bg_remove', this)" class="feature-card w-full p-4 rounded-xl text-left text-sm">Background Removal</button>
+            
+            <p class="text-[10px] text-zinc-500 uppercase font-bold mt-6">Cinematic Tools</p>
+            <button onclick="setTask('slowmo', this)" class="feature-card w-full p-4 rounded-xl text-left text-sm">Pro Slow Motion</button>
+            <button onclick="setTask('color_grade', this)" class="feature-card w-full p-4 rounded-xl text-left text-sm">Cinematic LUTs</button>
+            <button onclick="setTask('noise_reduction', this)" class="feature-card w-full p-4 rounded-xl text-left text-sm">AI Noise Clean</button>
         </div>
     </div>
 
+    <div class="flex-1 p-10 flex flex-col">
+        <div class="flex-1 bg-zinc-900/50 rounded-[30px] border border-zinc-800 flex items-center justify-center relative overflow-hidden mb-8">
+            <video id="outputVideo" class="hidden w-full h-full object-contain" controls></video>
+            <div id="placeholder" class="text-zinc-600 text-center">
+                <p class="text-2xl font-light">READY TO RENDER</p>
+                <p class="text-xs mt-2 uppercase tracking-widest opacity-50">Upload an asset to begin AI processing</p>
+            </div>
+        </div>
+
+        <form id="renderForm" class="bg-zinc-900 p-8 rounded-3xl border border-zinc-800 grid grid-cols-3 gap-6">
+            <div class="col-span-1">
+                <label class="block text-[10px] text-zinc-500 mb-2">SOURCE FILE</label>
+                <input type="file" name="video" class="text-xs" required>
+            </div>
+            
+            <div class="col-span-1">
+                <label class="block text-[10px] text-zinc-500 mb-2">TARGET LANGUAGE (DUBBING)</label>
+                <select name="target_lang" class="w-full bg-black border border-zinc-800 p-3 rounded-xl text-xs outline-none focus:border-blue-500">
+                    <option value="bn">Bengali (বাংলাদেশ)</option>
+                    <option value="en">English (US)</option>
+                    <option value="hi">Hindi (India)</option>
+                </select>
+            </div>
+
+            <div class="col-span-1 flex items-end">
+                <input type="hidden" name="task" id="currentTask" value="dubbing">
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest transition-all">Execute AI Render</button>
+            </div>
+        </form>
+    </div>
+
     <script>
-        function setTask(task) { document.getElementById('taskInput').value = task; alert("Task set to: " + task); }
+        function setTask(task, btn) {
+            document.getElementById('currentTask').value = task;
+            document.querySelectorAll('.feature-card').forEach(b => b.classList.remove('active-task'));
+            btn.classList.add('active-task');
+        }
+
         document.getElementById('renderForm').onsubmit = async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "RENDERING...";
+            btn.disabled = true;
+
             const formData = new FormData(e.target);
-            const res = await fetch('/render', { method: 'POST', body: formData });
-            const blob = await res.blob();
-            document.getElementById('preview').src = URL.createObjectURL(blob);
-            document.getElementById('preview').classList.remove('hidden');
-            document.getElementById('uploadPlaceholder').classList.add('hidden');
+            try {
+                const res = await fetch('/render', { method: 'POST', body: formData });
+                if (!res.ok) throw new Error("Render Failed");
+                
+                const blob = await res.blob();
+                const videoUrl = URL.createObjectURL(blob);
+                
+                document.getElementById('placeholder').classList.add('hidden');
+                document.getElementById('outputVideo').classList.remove('hidden');
+                document.getElementById('outputVideo').src = videoUrl;
+                document.getElementById('outputVideo').play();
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                btn.innerText = "EXECUTE AI RENDER";
+                btn.disabled = false;
+            }
         };
     </script>
 </body>
