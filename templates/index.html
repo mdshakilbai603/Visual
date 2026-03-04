@@ -2,80 +2,70 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>AI MASTER | Professional Video Cloud Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI MASTER | Professional Mobile Editor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #000; color: #eee; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .glass { background: rgba(10, 10, 10, 0.8); border: 1px solid #1a1a1a; border-radius: 25px; backdrop-filter: blur(10px); }
-        .feature-btn { background: #111; border: 1px solid #222; transition: 0.3s; padding: 12px; border-radius: 12px; font-size: 11px; text-align: left; width: 100%; }
-        .feature-btn:hover { border-color: #3b82f6; background: #151515; }
-        .active-task { border-color: #3b82f6; color: #3b82f6; background: #1a1a1a; }
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(12px); border: 1px solid #222; }
+        .tool-card { background: #111; border: 1px solid #222; transition: 0.2s; }
+        .tool-card:active { transform: scale(0.95); border-color: #3b82f6; }
+        .active-tool { border-color: #3b82f6; background: #1a1a1a; color: #3b82f6; }
+        /* Hide scrollbar */
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="flex h-screen p-6 gap-6">
-    <div class="w-80 glass p-6 overflow-y-auto space-y-4">
-        <h1 class="text-xl font-black italic text-blue-500 mb-6 tracking-tighter">AI MASTER V3</h1>
-        
-        <p class="text-[10px] text-zinc-600 uppercase font-bold">AI Video Tools</p>
-        <button onclick="setTask('dubbing', this)" class="feature-btn active-task">Global AI Dubbing</button>
-        <button onclick="setTask('upscale', this)" class="feature-btn">4K Ultra Upscale</button>
-        <button onclick="setTask('subtitle', this)" class="feature-btn">Auto AI Captions</button>
-        <button onclick="setTask('bg_remove', this)" class="feature-btn">Remove Video Background</button>
+<body class="bg-black min-h-screen flex flex-col">
+    <header class="p-5 flex justify-between items-center glass sticky top-0 z-50">
+        <h1 class="font-black italic text-xl tracking-tighter text-blue-500">AI MASTER</h1>
+        <div class="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+    </header>
 
-        <p class="text-[10px] text-zinc-600 uppercase font-bold mt-4">Cinematic Editing</p>
-        <button onclick="setTask('color_grade', this)" class="feature-btn">Cinematic Color LUTs</button>
-        <button onclick="setTask('slowmo', this)" class="feature-btn">Optical Flow Slow-Mo</button>
-        <button onclick="setTask('noise_clean', this)" class="feature-btn">Voice Noise Reduction</button>
-        <button onclick="setTask('hdr', this)" class="feature-btn">AI HDR Enhancement</button>
-    </div>
-
-    <div class="flex-1 flex flex-col gap-6">
-        <div class="flex-1 glass relative overflow-hidden flex items-center justify-center">
-            <video id="preview" class="hidden w-full h-full object-contain" controls></video>
-            <div id="loader" class="text-zinc-700 text-xs uppercase tracking-[0.3em]">Ready for Production</div>
+    <main class="flex-1 p-4 flex flex-col gap-4 max-w-4xl mx-auto w-full">
+        <div class="aspect-video glass rounded-[30px] flex items-center justify-center overflow-hidden relative">
+            <video id="mainVideo" class="hidden w-full h-full object-contain" controls></video>
+            <div id="status" class="text-[10px] text-zinc-600 uppercase tracking-[0.4em]">Engine Standby</div>
         </div>
 
-        <form id="renderForm" class="glass p-8 grid grid-cols-3 gap-6 items-end">
-            <div class="col-span-1">
-                <label class="text-[10px] text-zinc-500 block mb-2">SOURCE ASSET</label>
-                <input type="file" name="video" class="text-xs w-full" required>
-            </div>
-            <div class="col-span-1">
-                <label class="text-[10px] text-zinc-500 block mb-2">OUTPUT CONFIG</label>
-                <select name="target_lang" class="w-full bg-black border border-zinc-800 p-3 rounded-xl text-xs outline-none">
-                    <option value="bn">Bengali (বাংলাদেশ)</option>
-                    <option value="en">English (US)</option>
-                    <option value="hi">Hindi (India)</option>
-                </select>
-            </div>
-            <input type="hidden" name="task" id="taskInput" value="dubbing">
-            <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-700 py-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">Execute AI Render</button>
+        <div class="flex gap-3 overflow-x-auto pb-2" id="tools">
+            <button onclick="setTask('cinematic', this)" class="tool-card px-6 py-3 rounded-2xl whitespace-nowrap text-xs font-bold active-tool">Cinematic LUT</button>
+            <button onclick="setTask('slowmo', this)" class="tool-card px-6 py-3 rounded-2xl whitespace-nowrap text-xs font-bold">Slow Motion</button>
+            <button onclick="setTask('dubbing', this)" class="tool-card px-6 py-3 rounded-2xl whitespace-nowrap text-xs font-bold">AI Dubbing</button>
+            <button onclick="setTask('bw', this)" class="tool-card px-6 py-3 rounded-2xl whitespace-nowrap text-xs font-bold">B&W Classic</button>
+            <button onclick="setTask('hdr', this)" class="tool-card px-6 py-3 rounded-2xl whitespace-nowrap text-xs font-bold">HDR Boost</button>
+        </div>
+
+        <form id="masterForm" class="glass p-6 rounded-[30px] space-y-4">
+            <input type="file" name="video" class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-600 file:text-white" required>
+            
+            <input type="hidden" name="task" id="taskInput" value="cinematic">
+            
+            <button type="submit" id="submitBtn" class="w-full bg-white text-black font-black py-4 rounded-2xl uppercase text-xs tracking-widest hover:bg-blue-500 hover:text-white transition">Render Output</button>
         </form>
-    </div>
+    </main>
 
     <script>
         function setTask(task, btn) {
             document.getElementById('taskInput').value = task;
-            document.querySelectorAll('.feature-btn').forEach(b => b.classList.remove('active-task'));
-            btn.classList.add('active-task');
+            document.querySelectorAll('.tool-card').forEach(b => b.classList.remove('active-tool'));
+            btn.classList.add('active-tool');
         }
 
-        document.getElementById('renderForm').onsubmit = async (e) => {
+        document.getElementById('masterForm').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            btn.innerText = "RENDERING...";
+            btn.innerText = "PROCESSING...";
             btn.disabled = true;
 
             const formData = new FormData(e.target);
             try {
-                const res = await fetch('/render', { method: 'POST', body: formData });
-                if(!res.ok) throw new Error("Render Failed");
+                const res = await fetch('/process', { method: 'POST', body: formData });
                 const blob = await res.blob();
-                document.getElementById('preview').src = URL.createObjectURL(blob);
-                document.getElementById('preview').classList.remove('hidden');
-                document.getElementById('loader').classList.add('hidden');
-            } catch (err) { alert(err.message); }
-            finally { btn.innerText = "EXECUTE AI RENDER"; btn.disabled = false; }
+                document.getElementById('status').classList.add('hidden');
+                document.getElementById('mainVideo').classList.remove('hidden');
+                document.getElementById('mainVideo').src = URL.createObjectURL(blob);
+            } catch (err) { alert("Error: " + err); }
+            finally { btn.innerText = "RENDER OUTPUT"; btn.disabled = false; }
         };
     </script>
 </body>
