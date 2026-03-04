@@ -1,8 +1,5 @@
 flask
 gunicorn
-moviepy
-torch
-transformers
+stripe
 opencv-python
-requests
-google-cloud-storage
+moviepy
