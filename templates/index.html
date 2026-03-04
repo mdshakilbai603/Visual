@@ -3,177 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI MASTER | Global Universal Studio</title>
+    <title>AI MASTER | Pro Editor</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;700&display=swap" rel="stylesheet">
-    
     <style>
-        :root { --bg: #000000; }
-        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; margin: 0; }
-
-        /* Splash Screen - ১.৫ সেকেন্ডের প্রিমিয়াম এনিমেশন */
-        #splash {
-            position: fixed; inset: 0; background: #000; z-index: 100;
-            display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.8s cubic-bezier(0.19, 1, 0.22, 1);
-        }
-        .splash-logo { 
-            font-size: 12px; letter-spacing: 1.2em; text-transform: uppercase; 
-            font-weight: 100; opacity: 0; animation: logoFade 1.8s ease-in-out forwards;
-        }
-        @keyframes logoFade {
-            0% { opacity: 0; letter-spacing: 0.5em; filter: blur(10px); }
-            50% { opacity: 1; filter: blur(0px); }
-            100% { opacity: 0; letter-spacing: 1.5em; }
-        }
-
-        /* ব্যাকগ্রাউন্ড এনিমেশন (সুপার ফাস্ট) */
-        .bg-gradient {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
-            z-index: -1;
-        }
-        .ambient-glow {
-            position: absolute; width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
-            border-radius: 50%; top: -200px; left: -200px;
-            animation: move 20s infinite alternate; z-index: -1;
-        }
-        @keyframes move { from { transform: translate(0,0); } to { transform: translate(100vw, 50vh); } }
-
-        /* প্রিমিয়াম গ্লাস বক্স ডিজাইন */
-        .glass-studio {
-            background: rgba(255, 255, 255, 0.01);
-            backdrop-filter: blur(40px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 60px;
-            opacity: 0; transform: translateY(20px);
-        }
-        .loaded .glass-studio { opacity: 1; transform: translateY(0); transition: 1s cubic-bezier(0.19, 1, 0.22, 1); }
-
-        .upload-pulse {
-            border: 1px dashed rgba(255,255,255,0.1);
-            position: relative; overflow: hidden; transition: 0.4s;
-        }
-        .upload-pulse:hover { border-color: #fff; background: rgba(255,255,255,0.02); }
-
-        .loading-line { height: 2px; width: 0%; background: #fff; box-shadow: 0 0 15px #fff; transition: 0.3s; }
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; }
+        .preview-box { width: 100%; max-width: 500px; margin: 20px auto; display: none; }
+        video { width: 100%; border-radius: 20px; border: 1px solid #333; }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
-
-    <div id="splash">
-        <div class="splash-logo">Initializing AI Engine</div>
-    </div>
-
-    <div class="bg-gradient"></div>
-    <div class="ambient-glow"></div>
-
-    <audio id="introAudio" src="https://assets.mixkit.co/sfx/preview/mixkit-deep-cinematic-whoosh-603.mp3"></audio>
-
-    <div class="container max-w-5xl px-6 py-12">
-        <header class="text-center mb-20">
-            <h1 class="text-7xl md:text-9xl font-extralight tracking-tighter mb-4">
-                AI <span class="font-bold opacity-10 text-white">MASTER.</span>
-            </h1>
-            <div class="flex items-center justify-center gap-6 text-[9px] tracking-[0.6em] text-neutral-700 font-bold uppercase">
-                <span>195 Nodes Active</span>
-                <span class="w-1 h-1 bg-green-500 rounded-full animate-pulse"></span>
-                <span>Universal Asset Access</span>
-            </div>
-        </header>
-
-        <div class="glass-studio p-1 md:p-2">
-            <div class="bg-black rounded-[58px] p-10 md:p-20">
-                <form action="/edit" method="POST" enctype="multipart/form-data" id="editorForm">
-                    
-                    <div class="upload-pulse h-80 rounded-[40px] flex flex-col items-center justify-center mb-16 cursor-pointer group">
-                        <input type="file" name="video" id="videoInput" 
-                               class="absolute inset-0 opacity-0 z-30 cursor-pointer" 
-                               accept="video/*,image/*,audio/*,.pdf,.zip" required> 
-                        
-                        <div class="text-center space-y-4 pointer-events-none z-10">
-                            <div class="text-neutral-500 text-xs tracking-[0.4em] font-light uppercase transition group-hover:text-white" id="fileName">Select Any Digital Asset</div>
-                            <div class="text-[7px] text-neutral-800 tracking-[0.8em] font-bold uppercase">Main Storage Interface</div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-end">
-                        <div class="md:col-span-8 space-y-4">
-                            <p class="text-[8px] tracking-[0.5em] text-neutral-700 font-bold uppercase ml-1">Overlay Metadata</p>
-                            <input type="text" name="text" placeholder="Type branding text..." 
-                                   class="w-full bg-transparent border-b border-neutral-900 py-4 text-xl font-light outline-none focus:border-white transition-all duration-700 uppercase">
-                        </div>
-                        <div class="md:col-span-4">
-                            <button type="submit" id="renderBtn" class="w-full bg-white text-black py-6 rounded-2xl font-bold text-[10px] tracking-[0.4em] uppercase hover:bg-neutral-200 transition-all active:scale-95 shadow-2xl">
-                                Initialize AI Render
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-                <div id="loader" class="hidden mt-20 space-y-4">
-                    <div class="w-full bg-neutral-900 h-[1px]">
-                        <div id="progressBar" class="loading-line"></div>
-                    </div>
-                    <div class="flex justify-between text-[8px] tracking-[0.5em] text-neutral-500 uppercase">
-                        <span class="animate-pulse">Processing Universal Asset...</span>
-                        <span id="pct">0%</span>
-                    </div>
-                </div>
+<body class="flex items-center justify-center min-h-screen p-6">
+    <div class="glass-card p-10 w-full max-w-2xl text-center">
+        <h1 class="text-4xl font-thin tracking-widest mb-10">AI MASTER <span class="font-bold opacity-20">PRO</span></h1>
+        
+        <div id="videoPreview" class="preview-box">
+            <p class="text-[10px] tracking-[0.5em] text-green-500 mb-4">RENDERING COMPLETE</p>
+            <video id="player" controls autoplay loop></video>
+            <div class="mt-6">
+                <button onclick="window.location.reload()" class="text-[10px] tracking-widest border border-white/20 px-6 py-3 rounded-full hover:bg-white hover:text-black transition">EDIT ANOTHER</button>
             </div>
         </div>
+
+        <form id="uploadForm" action="/edit" method="POST" enctype="multipart/form-data">
+            <div class="border-2 border-dashed border-neutral-800 rounded-[30px] p-16 mb-8 hover:border-white transition-all cursor-pointer relative">
+                <input type="file" name="video" class="absolute inset-0 opacity-0 cursor-pointer" required onchange="updateName(this)">
+                <p id="fileLabel" class="text-neutral-500 text-xs tracking-widest uppercase">Select Video Asset</p>
+            </div>
+            
+            <input type="text" name="text" placeholder="Enter Overlay Text" class="w-full bg-transparent border-b border-neutral-800 py-4 mb-10 outline-none focus:border-white text-center uppercase tracking-widest">
+            
+            <button type="submit" id="btn" class="w-full bg-white text-black py-5 rounded-2xl font-bold tracking-widest text-[10px] uppercase">Initialize AI Render</button>
+        </form>
     </div>
 
     <script>
-        const splash = document.getElementById('splash');
-        const videoInput = document.getElementById('videoInput');
-        const fileName = document.getElementById('fileName');
-        const form = document.getElementById('editorForm');
-        const loader = document.getElementById('loader');
-        const bar = document.getElementById('progressBar');
-        const pct = document.getElementById('pct');
+        function updateName(input) {
+            if(input.files[0]) document.getElementById('fileLabel').innerText = "LOADED: " + input.files[0].name.toUpperCase();
+        }
 
-        // Splash Screen ১.৮ সেকেন্ড পর সরে যাবে
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                splash.style.opacity = '0';
-                document.body.classList.add('loaded');
-                setTimeout(() => splash.remove(), 800);
-            }, 1800);
-        });
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn');
+            btn.innerText = "PROCESSING...";
+            btn.disabled = true;
 
-        // প্রথম ইন্টারঅ্যাকশনে সাউন্ড প্লে হবে
-        window.addEventListener('mouseover', () => {
-            document.getElementById('introAudio').play().catch(()=>{});
-        }, { once: true });
-
-        // ফাইল সিলেক্ট করলে নাম দেখাবে এবং ১ সেকেন্ডে বার পূর্ণ হবে
-        videoInput.onchange = (e) => {
-            if (e.target.files.length > 0) {
-                fileName.innerText = "ASSET LOADED: " + e.target.files[0].name.toUpperCase();
-                fileName.style.color = "#fff";
-                
-                // ফেক প্রোগ্রেস বার (ইউজারকে ১ সেকেন্ডের অনুভূতি দিতে)
-                loader.classList.remove('hidden');
-                let width = 0;
-                const fastLoad = setInterval(() => {
-                    if (width >= 100) {
-                        clearInterval(fastLoad);
-                    } else {
-                        width += 5;
-                        bar.style.width = width + '%';
-                        pct.innerText = width + '%';
-                    }
-                }, 40);
+            const formData = new FormData(e.target);
+            const response = await fetch('/edit', { method: 'POST', body: formData });
+            
+            if(response.ok) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                document.getElementById('uploadForm').style.display = 'none';
+                document.getElementById('videoPreview').style.display = 'block';
+                document.getElementById('player').src = url;
+            } else {
+                alert("Processing Failed!");
+                btn.innerText = "TRY AGAIN";
+                btn.disabled = false;
             }
-        };
-
-        // ফর্ম সাবমিট লজিক
-        form.onsubmit = () => {
-            document.getElementById('renderBtn').innerText = "Processing Asset";
-            document.getElementById('renderBtn').style.opacity = '0.2';
-            document.getElementById('renderBtn').disabled = true;
         };
     </script>
 </body>
