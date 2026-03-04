@@ -1,19 +1,18 @@
 import os
 import subprocess
 from flask import Flask, render_template, request, send_file
-# ওপেন সোর্স লাইব্রেরি
 from gtts import gTTS 
-import whisper # pip install openai-whisper
+import whisper
 
 app = Flask(__name__)
 
-# ডিরেক্টরি সেটআপ
+# ফোল্ডার তৈরি
 UPLOAD_FOLDER = 'uploads'
 OUTPUT_FOLDER = 'processed'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
-# Whisper মডেল লোড করা (এটি একবারই ডাউনলোড হবে)
+# Whisper মডেল লোড (ওপেন সোর্স)
 model = whisper.load_model("base")
 
 @app.route('/')
@@ -22,34 +21,42 @@ def index():
 
 @app.route('/render', methods=['POST'])
 def render_engine():
+    if 'video' not in request.files:
+        return "No video file uploaded", 400
+        
     video = request.files['video']
     task = request.form.get('task')
+    target_lang = request.form.get('target_lang', 'bn')
     
     input_p = os.path.join(UPLOAD_FOLDER, video.filename)
-    output_p = os.path.join(OUTPUT_FOLDER, "AI_FREE_" + video.filename)
+    output_p = os.path.join(OUTPUT_FOLDER, "AI_MASTER_" + video.filename)
     video.save(input_p)
 
-    # --- ফ্রি ডাবিং লজিক ---
     if task == "dubbing":
-        # ১. অডিও এক্সট্রাক্ট
-        subprocess.run(f"ffmpeg -i {input_p} -vn -acodec mp3 temp.mp3 -y", shell=True)
+        # ১. অডিও বের করা
+        audio_temp = "temp.mp3"
+        subprocess.run(f"ffmpeg -i '{input_p}' -vn -acodec mp3 '{audio_temp}' -y", shell=True)
         
-        # ২. ফ্রি স্পিচ টু টেক্সট (Whisper)
-        result = model.transcribe("temp.mp3")
-        original_text = result['text']
+        # ২. ভয়েস টু টেক্সট (Whisper)
+        result = model.transcribe(audio_temp)
         
-        # ৩. ফ্রি ট্রান্সলেশন এবং ভয়েস (gTTS)
-        tts = gTTS(text=original_text, lang='bn') # সরাসরি বাংলায় ডাবিং
-        tts.save("dubbed_audio.mp3")
+        # ৩. ট্রান্সলেশন ও ভয়েস জেনারেশন (gTTS)
+        tts = gTTS(text=result['text'], lang=target_lang)
+        dubbed_audio = "dubbed.mp3"
+        tts.save(dubbed_audio)
 
-        # ৪. অডিও ভিডিও মার্জ
-        subprocess.run(f"ffmpeg -i {input_p} -i dubbed_audio.mp3 -c:v copy -map 0:v:0 -map 1:a:0 -shortest {output_p} -y", shell=True)
-
-    # --- ফ্রি এডিটিং ফিচারস ---
+        # ৪. ভিডিওর সাথে নতুন ভয়েস মার্জ করা
+        subprocess.run(f"ffmpeg -i '{input_p}' -i '{dubbed_audio}' -c:v copy -map 0:v:0 -map 1:a:0 -shortest '{output_p}' -y", shell=True)
+        
     elif task == "slowmo":
-        subprocess.run(f"ffmpeg -i {input_p} -vf 'minterpolate=fps=60,setpts=2*PTS' {output_p} -y", shell=True)
+        subprocess.run(f"ffmpeg -i '{input_p}' -vf 'setpts=2*PTS' '{output_p}' -y", shell=True)
+    
+    elif task == "upscale":
+        # ওপেন সোর্স স্কেলিং
+        subprocess.run(f"ffmpeg -i '{input_p}' -vf scale=1280:-1 '{output_p}' -y", shell=True)
 
     return send_file(output_p, mimetype='video/mp4')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
