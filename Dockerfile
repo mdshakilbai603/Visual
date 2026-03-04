@@ -1,15 +1,18 @@
 FROM python:3.10-slim
 
-# FFmpeg এবং অন্যান্য সিস্টেম ফাইল
+# FFmpeg এবং প্রয়োজনীয় সিস্টেম ফাইল ইনস্টল
 RUN apt-get update && apt-get install -y \
-    ffmpeg git \
+    ffmpeg \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# ওপেন সোর্স লাইব্রেরি ইনস্টল
-RUN pip install flask gunicorn openai-whisper gtts torch torchvision
+# লাইব্রেরি ইনস্টল
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["gunicorn", "--bind", "0.0.0.0:10000", "engine:app", "--timeout", "0"]
+# Render এর পোর্টের জন্য কনফিগারেশন
+CMD ["gunicorn", "--bind", "0.0.0.0:10000", "engine:app", "--timeout", "600"]
