@@ -1,5 +1,7 @@
 flask
 gunicorn
-stripe
-opencv-python
-moviepy
+openai-whisper
+gTTS
+torch
+torchvision
+setuptools
